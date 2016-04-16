@@ -3,8 +3,10 @@ package com.tybprojekt.ld35.game.entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.particles.values.EllipseSpawnShapeValue;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
@@ -13,7 +15,7 @@ import com.tybprojekt.ld35.game.Control;
 
 public class Player extends Entity {
 
-	private final int MOVE_SPEED = 150;
+	private final int MOVE_SPEED = 10000;
 	private boolean facingLeft;
 	
 	private Animator animator;
@@ -32,12 +34,23 @@ public class Player extends Entity {
 		bdef.position.set(getX(), getY());
 		body = world.createBody(bdef);
 		
+		// Collider
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
 		FixtureDef fdef = new FixtureDef();
 		fdef.shape = shape;
+		fdef.friction = 1;
 		body.createFixture(fdef);
+		
+		// Interacting range
+		CircleShape shape2 = new CircleShape();
+		shape2.setRadius(sprite.getWidth() - 5);
+		fdef.shape = shape2;
+		fdef.isSensor = true;
+		body.createFixture(fdef);
+		
 		shape.dispose();
+		shape2.dispose();
 	}
 	
 	@Override
@@ -59,27 +72,33 @@ public class Player extends Entity {
 		else
 			sprite.setScale(1, 1);
 		
-		body.setTransform(getX() + sprite.getWidth()/2, getY() + sprite.getHeight()/2, body.getAngle());
+		sprite.setPosition(body.getPosition().x - sprite.getWidth()/2, body.getPosition().y - sprite.getHeight()/2);
+	}
+	
+	@Override
+	public void translate(float xAmount, float yAmount) {
+		body.setLinearVelocity(xAmount, yAmount);
 	}
 	
 	private void handleInput(float dt) {
+		body.setLinearVelocity(0, 0);
 		
 		if (Gdx.input.isKeyPressed(Control.LEFT_KEY)) {
-			translate(-MOVE_SPEED * dt, 0);
+			body.setLinearVelocity(-MOVE_SPEED * dt, body.getLinearVelocity().y);
 			facingLeft = true;
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.RIGHT_KEY)) {
-			translate(MOVE_SPEED * dt, 0);
+			body.setLinearVelocity(MOVE_SPEED * dt, body.getLinearVelocity().y);
 			facingLeft = false;
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.UP_KEY)) {
-			translate(0, MOVE_SPEED * dt);
+			body.setLinearVelocity(body.getLinearVelocity().x, MOVE_SPEED * dt);
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.DOWN_KEY)) {
-			translate(0, -MOVE_SPEED * dt);
+			body.setLinearVelocity(body.getLinearVelocity().x, -MOVE_SPEED * dt);
 		}
 		
 	}
