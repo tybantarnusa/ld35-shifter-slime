@@ -48,4 +48,6 @@ public abstract class Entity {
 	public void dispose() {
 		sprite.getTexture().dispose();
 	}
+	
+	public void interactWith(){}
 }
