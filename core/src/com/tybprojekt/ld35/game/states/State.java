@@ -6,5 +6,6 @@ public interface State {
 	
 	public void update(float dt);
 	public void render(SpriteBatch batch);
+	public void dispose();
 	
 }

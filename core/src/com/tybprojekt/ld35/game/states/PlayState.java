@@ -1,25 +1,28 @@
 package com.tybprojekt.ld35.game.states;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import entities.Player;
+
 public class PlayState implements State {
-	private Texture texture;
+	private Player player;
 	
 	public PlayState() {
-		texture = new Texture("badlogic.jpg");
+		player = new Player();
 	}
 	
 	@Override
 	public void update(float dt) {
-		
+		player.update(dt);
 	}
 
 	@Override
 	public void render(SpriteBatch batch) {
-		batch.begin();
-		batch.draw(texture, 0, 0);
-		batch.end();
+		player.render(batch);
+	}
+	
+	public void dispose() {
+		player.dispose();
 	}
 
 }

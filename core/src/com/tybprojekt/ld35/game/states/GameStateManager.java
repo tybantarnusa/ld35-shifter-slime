@@ -14,7 +14,9 @@ public class GameStateManager {
 	}
 	
 	public State pop() {
-		return states.pop();
+		State state = states.pop();
+		state.dispose();
+		return state;
 	}
 	
 	public void push(State state) {
@@ -22,7 +24,7 @@ public class GameStateManager {
 	}
 	
 	public void change(State state) {
-		states.pop();
+		states.pop().dispose();
 		states.push(state);
 	}
 }
