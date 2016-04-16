@@ -7,9 +7,11 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.tybprojekt.ld35.game.Collisions;
 import com.tybprojekt.ld35.game.entities.Player;
 
 public class PlayState implements State {
@@ -26,6 +28,7 @@ public class PlayState implements State {
 		cam.setToOrtho(false);
 		
 		world = new World(new Vector2(0, 0), true);
+		world.setContactListener(new Collisions());
 		
 		player = new Player();
 		player.createBody(world);
@@ -43,7 +46,8 @@ public class PlayState implements State {
 		shape.setAsBox(32/2, 32/2);
 		FixtureDef fdef = new FixtureDef();
 		fdef.shape = shape;
-		body.createFixture(fdef);
+		Fixture fixture = body.createFixture(fdef);
+		fixture.setUserData("interactable");
 		shape.dispose();
 	}
 	

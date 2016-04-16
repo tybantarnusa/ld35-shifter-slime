@@ -3,10 +3,10 @@ package com.tybprojekt.ld35.game.entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.particles.values.EllipseSpawnShapeValue;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
@@ -17,6 +17,8 @@ public class Player extends Entity {
 
 	private final int MOVE_SPEED = 10000;
 	private boolean facingLeft;
+	
+	private Object nextTo;
 	
 	private Animator animator;
 	
@@ -33,6 +35,7 @@ public class Player extends Entity {
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		bdef.position.set(getX(), getY());
 		body = world.createBody(bdef);
+		body.setUserData(this);
 		
 		// Collider
 		PolygonShape shape = new PolygonShape();
@@ -47,7 +50,8 @@ public class Player extends Entity {
 		shape2.setRadius(sprite.getWidth() - 5);
 		fdef.shape = shape2;
 		fdef.isSensor = true;
-		body.createFixture(fdef);
+		Fixture fixture = body.createFixture(fdef);
+		fixture.setUserData("interactor");
 		
 		shape.dispose();
 		shape2.dispose();
@@ -101,11 +105,19 @@ public class Player extends Entity {
 			body.setLinearVelocity(body.getLinearVelocity().x, -MOVE_SPEED * dt);
 		}
 		
+		// Interact
+		if (Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) && nextTo != null) {
+			System.out.println("Howdy!");
+		}
+		
+	}
+	
+	public void setNextTo(Object what) {
+		nextTo = what;
 	}
 	
 	@Override
 	public void dispose() {
 		super.dispose();
-		
 	}
 }
