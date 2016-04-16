@@ -24,6 +24,7 @@ public class Drill extends BubbledEntity {
 	@Override
 	public void update(float dt) {
 		setPosition(body.getPosition().x - getHalfWidth(), body.getPosition().y - getHalfHeight());
+		sprite.setRotation(90 * body.getAngle());
 		playBubble(dt);
 	}
 	
@@ -44,11 +45,13 @@ public class Drill extends BubbledEntity {
 		bdef.position.set(500, 500);
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		body = world.createBody(bdef);
+		body.setLinearDamping(2);
 		body.setUserData(this);
+		body.setFixedRotation(true);
 		PolygonShape shape = new PolygonShape();
-		shape.setAsBox(getHalfWidth(), getHalfHeight());
+		shape.set(new float[]{getX() - getHalfWidth(), getY(), getX() + getHalfWidth(), getY() + getHalfHeight(), getX(), getY() - getHalfHeight(), getX() - 5, getY() - getHalfHeight(), getX() - getHalfWidth(), getY() - 5});
 		FixtureDef fdef = new FixtureDef();
-		fdef.density = 100;
+		fdef.density = 5;
 		fdef.shape = shape;
 		Fixture fixture = body.createFixture(fdef);
 		fixture.setUserData("interactable");

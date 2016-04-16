@@ -3,8 +3,11 @@ package com.tybprojekt.ld35.game.entities;
 import java.util.TreeMap;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -25,14 +28,17 @@ public class Player extends Entity {
 		TURRET
 	}
 
-	private final int MOVE_SPEED = 30000;
+	private final int MOVE_SPEED = 100000;
 	private boolean facingLeft;
 	private BubbledEntity nextTo;
 	private TreeMap<String, Animator> animators;
 	private Animator animator;
 	private Body body;
 	private Shape currentShape;
-	private final float SHIFT_TIME = 3;
+	private final float SHIFT_TIME = 10;
+	private Sound shiftSfx;
+	private Sound stepSfx;
+	private boolean isWalking;
 	
 	private float timer;
 	
@@ -42,10 +48,16 @@ public class Player extends Entity {
 		animators = new TreeMap<String, Animator>();
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
 		animators.put("shift drill", new Animator("slime_transform_drill.png", 0.1f));
+		animators.put("drill", new Animator("slime_drill.png", 0.3f));
 		animator = animators.get("normal");
 		
 		sprite = new Sprite(animator.getCurrentFrame(), 0, 0, 2 * animator.getCurrentFrame().getRegionWidth(), 2 * animator.getCurrentFrame().getRegionHeight());
 		currentShape = Shape.NORMAL;
+		
+		shiftSfx = Gdx.audio.newSound(new FileHandle("shapeshift.ogg"));
+		stepSfx = Gdx.audio.newSound(new FileHandle("step.ogg"));
+		
+		isWalking = false;
 	}
 	
 	public void createBody(World world) {
@@ -59,6 +71,8 @@ public class Player extends Entity {
 	}
 	
 	private void createNormalFixture() {
+		for(int i = 0; i < body.getFixtureList().size; i++)
+			body.destroyFixture(body.getFixtureList().get(i));
 		body.getFixtureList().clear();
 		
 		// Collider
@@ -79,6 +93,8 @@ public class Player extends Entity {
 	}
 	
 	private void createDrillFixture() {
+		for(int i = 0; i < body.getFixtureList().size; i++)
+			body.destroyFixture(body.getFixtureList().get(i));
 		body.getFixtureList().clear();
 		
 		// Collider
@@ -140,7 +156,18 @@ public class Player extends Entity {
 		
 		handleInput(dt);
 		
-		if (currentShape != Shape.SHIFTING) animator.play(dt);
+		if (currentShape != Shape.SHIFTING) {
+			if (animator.isFinished()) {
+				animator.setLoop(true);
+				switch(currentShape) {
+				case DRILL:
+					animator = animators.get("drill");
+				default:
+					break;
+				}
+			}
+			animator.play(dt);
+		}
 		
 		sprite.setRegion(animator.getCurrentFrame());
 		
@@ -174,23 +201,38 @@ public class Player extends Entity {
 	
 	private void handleInput(float dt) {
 		body.setLinearVelocity(0, 0);
+		isWalking = false;
+		
+		if (!(Gdx.input.isKeyPressed(Control.LEFT_KEY)
+			|| Gdx.input.isKeyPressed(Control.UP_KEY)
+			|| Gdx.input.isKeyPressed(Control.DOWN_KEY)
+			|| Gdx.input.isKeyPressed(Control.RIGHT_KEY)))
+			stepSfx.stop();
 		
 		if (Gdx.input.isKeyPressed(Control.LEFT_KEY)) {
 			body.setLinearVelocity(-MOVE_SPEED * dt, body.getLinearVelocity().y);
 			facingLeft = true;
+			if (!isWalking) stepSfx.play(0.2f, MathUtils.random(0.5f, 2), 0);
+			isWalking = true;
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.RIGHT_KEY)) {
 			body.setLinearVelocity(MOVE_SPEED * dt, body.getLinearVelocity().y);
 			facingLeft = false;
+			if (!isWalking) stepSfx.play(0.2f, MathUtils.random(0.5f, 2), 0);
+			isWalking = true;
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.UP_KEY)) {
 			body.setLinearVelocity(body.getLinearVelocity().x, MOVE_SPEED * dt);
+			if (!isWalking) stepSfx.play(0.2f, MathUtils.random(0.5f, 2), 0);
+			isWalking = true;
 		}
 		
 		if (Gdx.input.isKeyPressed(Control.DOWN_KEY)) {
 			body.setLinearVelocity(body.getLinearVelocity().x, -MOVE_SPEED * dt);
+			if (!isWalking) stepSfx.play(0.2f, MathUtils.random(0.5f, 2), 0);
+			isWalking = true;
 		}
 		
 		// Interact
@@ -198,6 +240,7 @@ public class Player extends Entity {
 			nextTo.interactWith();
 			if (nextTo instanceof Drill && currentShape == Shape.NORMAL) {
 				currentShape = Shape.DRILL;
+				shiftSfx.play();
 				animator = animators.get("shift drill");
 				animator.setLoop(false);
 				animator.reset();
@@ -214,6 +257,8 @@ public class Player extends Entity {
 	@Override
 	public void dispose() {
 		super.dispose();
+		shiftSfx.dispose();
+		stepSfx.dispose();
 	}
 	
 	public BubbledEntity getNextEntity() {

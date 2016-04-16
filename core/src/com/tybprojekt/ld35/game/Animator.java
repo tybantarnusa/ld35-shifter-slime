@@ -49,7 +49,6 @@ public class Animator {
 	}
 	
 	public void playBackward(float dt) {
-		System.out.println(elapsedTime + " | " + frameTime + " ");
 		if (loop || currentFrame >= 0) {
 			elapsedTime += dt;
 		}
@@ -96,9 +95,5 @@ public class Animator {
 	
 	public boolean isIndexZero() {
 		return currentFrame == 0;
-	}
-	
-	public void setTexture(String path) {
-		
 	}
 }
