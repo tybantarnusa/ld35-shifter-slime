@@ -1,4 +1,4 @@
-package entities;
+package com.tybprojekt.ld35.game.entities;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
