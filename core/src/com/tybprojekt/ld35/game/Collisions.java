@@ -27,7 +27,7 @@ public class Collisions implements ContactListener {
 	}
 	
 	private void interact(Fixture player, Fixture other) {
-		((Player) player.getBody().getUserData()).setNextTo(other);
+		((Player) player.getBody().getUserData()).setNextTo(other.getBody().getUserData());
 	}
 	
 	private void removeInteract(Fixture player, Fixture other) {
@@ -41,11 +41,10 @@ public class Collisions implements ContactListener {
 		
 		if (a.getUserData() != null && b.getUserData() != null) {
 		
-			// Player can interact with their surrounding
+			// Remove interactability
 			if (a.getUserData().equals("interactor") && b.getUserData().equals("interactable")) {
 				removeInteract(a, b);
 			}
-			
 			if (b.getUserData().equals("interactor") && a.getUserData().equals("interactable")) {
 				removeInteract(b, a);
 			}

@@ -25,6 +25,22 @@ public abstract class Entity {
 		sprite.setPosition(x, y);
 	}
 	
+	public float getHeight() {
+		return sprite.getHeight();
+	}
+	
+	public float getWidth() {
+		return sprite.getWidth();
+	}
+	
+	public float getHalfHeight() {
+		return getHeight()/2;
+	}
+	
+	public float getHalfWidth() {
+		return getWidth()/2;
+	}
+	
 	public void translate(float xAmount, float yAmount) {
 		sprite.translate(xAmount, yAmount);
 	}

@@ -35,6 +35,7 @@ public class PlayState implements State {
 		
 		b2dr = new Box2DDebugRenderer();
 		createDebugBody();
+		createDebugBody2();
 	}
 	
 	private void createDebugBody() {
@@ -42,6 +43,22 @@ public class PlayState implements State {
 		bdef.type = BodyDef.BodyType.StaticBody;
 		bdef.position.set(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
 		body = world.createBody(bdef);
+		body.setUserData("Howdy! I'm FLOWEY! FLOWEY the flower!");
+		PolygonShape shape = new PolygonShape();
+		shape.setAsBox(32/2, 32/2);
+		FixtureDef fdef = new FixtureDef();
+		fdef.shape = shape;
+		Fixture fixture = body.createFixture(fdef);
+		fixture.setUserData("interactable");
+		shape.dispose();
+	}
+	
+	private void createDebugBody2() {
+		BodyDef bdef = new BodyDef();
+		bdef.type = BodyDef.BodyType.StaticBody;
+		bdef.position.set(Gdx.graphics.getWidth()/2+300, Gdx.graphics.getHeight()/2);
+		body = world.createBody(bdef);
+		body.setUserData("Do you wanna have a bad time?!");
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(32/2, 32/2);
 		FixtureDef fdef = new FixtureDef();
@@ -53,6 +70,8 @@ public class PlayState implements State {
 	
 	@Override
 	public void update(float dt) {
+		cam.position.x = player.getX() + player.getHalfWidth();
+		cam.position.y = player.getY() + player.getHalfHeight();
 		cam.update();
 		player.update(dt);
 		world.step(dt, 6, 2);

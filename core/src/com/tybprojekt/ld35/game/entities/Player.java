@@ -15,7 +15,7 @@ import com.tybprojekt.ld35.game.Control;
 
 public class Player extends Entity {
 
-	private final int MOVE_SPEED = 10000;
+	private final int MOVE_SPEED = 30000;
 	private boolean facingLeft;
 	
 	private Object nextTo;
@@ -39,7 +39,8 @@ public class Player extends Entity {
 		
 		// Collider
 		PolygonShape shape = new PolygonShape();
-		shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/2);
+		shape.set(new float[] {getX() - getHalfWidth(), getY() - getHalfHeight(), getX() - getHalfWidth(), getY(), getX() + getHalfWidth(), getY(), getX() + getHalfWidth(), getY() - getHalfHeight()});
+//		shape.setAsBox(sprite.getWidth()/2, sprite.getHeight()/4);
 		FixtureDef fdef = new FixtureDef();
 		fdef.shape = shape;
 		fdef.friction = 1;
@@ -107,7 +108,7 @@ public class Player extends Entity {
 		
 		// Interact
 		if (Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) && nextTo != null) {
-			System.out.println("Howdy!");
+			System.out.println(nextTo);
 		}
 		
 	}
