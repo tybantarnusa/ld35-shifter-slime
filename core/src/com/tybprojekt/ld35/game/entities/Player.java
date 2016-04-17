@@ -28,7 +28,7 @@ public class Player extends Entity {
 		TURRET
 	}
 
-	private final int MOVE_SPEED = 100000;
+	private final float MOVE_SPEED = 10000;
 	private boolean facingLeft;
 	private BubbledEntity nextTo;
 	private TreeMap<String, Animator> animators;
@@ -39,6 +39,8 @@ public class Player extends Entity {
 	private Sound shiftSfx;
 	private Sound stepSfx;
 	private boolean isWalking;
+	private boolean doAction;
+	private boolean shifting;
 	
 	private float timer;
 	
@@ -49,6 +51,7 @@ public class Player extends Entity {
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
 		animators.put("shift drill", new Animator("slime_transform_drill.png", 0.1f));
 		animators.put("drill", new Animator("slime_drill.png", 0.3f));
+		animators.put("drilling", new Animator("slime_drilling.png", 0.05f));
 		animator = animators.get("normal");
 		
 		sprite = new Sprite(animator.getCurrentFrame(), 0, 0, 2 * animator.getCurrentFrame().getRegionWidth(), 2 * animator.getCurrentFrame().getRegionHeight());
@@ -58,12 +61,14 @@ public class Player extends Entity {
 		stepSfx = Gdx.audio.newSound(new FileHandle("step.ogg"));
 		
 		isWalking = false;
+		doAction = false;
+		shifting = false;
 	}
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
 		bdef.type = BodyDef.BodyType.DynamicBody;
-		bdef.position.set(300, 300);
+		bdef.position.set(0, 0);
 		body = world.createBody(bdef);
 		body.setUserData(this);
 		
@@ -105,7 +110,7 @@ public class Player extends Entity {
 		body.createFixture(fdef);
 		
 		// Interacting range
-		shape.setAsBox(getHalfWidth() + 10, getHalfHeight()/2 + 10);
+		shape.setAsBox(getHalfWidth()/2+5, getHalfHeight()/2, new Vector2(5, 15), 0);
 		fdef.shape = shape;
 		fdef.isSensor = true;
 		Fixture fixture = body.createFixture(fdef);
@@ -156,15 +161,32 @@ public class Player extends Entity {
 		
 		handleInput(dt);
 		
-		if (currentShape != Shape.SHIFTING) {
+		if (shifting) {
+			System.out.println("masuk");
+			animator.play(dt);
 			if (animator.isFinished()) {
-				animator.setLoop(true);
-				switch(currentShape) {
-				case DRILL:
-					animator = animators.get("drill");
-				default:
-					break;
-				}
+				shifting = false;
+			}
+		} 
+		
+		if (!shifting && currentShape != Shape.SHIFTING) {
+			switch(currentShape) {
+			case DRILL:
+				animator = animators.get("drill");
+			default:
+				break;
+			}
+			animator.play(dt);
+		}
+			
+		if (doAction && !shifting) {
+			System.out.println(doAction);
+			animator.setLoop(true);
+			switch (currentShape) {
+			case DRILL:
+				animator = animators.get("drilling");
+			default:
+				break;
 			}
 			animator.play(dt);
 		}
@@ -181,8 +203,10 @@ public class Player extends Entity {
 		case DRILL:
 			if (!facingLeft) {
 				((PolygonShape) body.getFixtureList().get(0).getShape()).setAsBox(getHalfWidth()/2 - 3, getHalfHeight()/2, new Vector2(-15, 0), 0);
+				((PolygonShape) body.getFixtureList().get(1).getShape()).setAsBox(getHalfWidth()/2+5, getHalfHeight()/2, new Vector2(5, 15), 0);;
 			} else {
 				((PolygonShape) body.getFixtureList().get(0).getShape()).setAsBox(getHalfWidth()/2 - 3, getHalfHeight()/2, new Vector2(15, 0), 0);
+				((PolygonShape) body.getFixtureList().get(1).getShape()).setAsBox(getHalfWidth()/2+5, getHalfHeight()/2, new Vector2(-10, 15), 0);;
 			}
 			break;
 		default:
@@ -237,21 +261,37 @@ public class Player extends Entity {
 		
 		// Interact
 		if (Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) && nextTo != null) {
-			nextTo.interactWith();
+			nextTo.interactWith(this);
 			if (nextTo instanceof Drill && currentShape == Shape.NORMAL) {
 				currentShape = Shape.DRILL;
+				shifting = true;
 				shiftSfx.play();
 				animator = animators.get("shift drill");
-				animator.setLoop(false);
 				animator.reset();
+				animator.setLoop(false);
 				createDrillFixture();
 			}
+		}
+		
+		if (Gdx.input.isKeyPressed(Control.CONFIRM_BUTTON)) {
+			doAction = true;
+			if (nextTo != null) {
+				if (nextTo instanceof Stone && currentShape == Shape.DRILL) {
+					nextTo.interactWith(this);
+				}
+			}
+		} else {
+			doAction = false;
 		}
 		
 	}
 	
 	public void setNextTo(BubbledEntity what) {
 		nextTo = what;
+	}
+	
+	public Shape getShape() {
+		return currentShape;
 	}
 	
 	@Override

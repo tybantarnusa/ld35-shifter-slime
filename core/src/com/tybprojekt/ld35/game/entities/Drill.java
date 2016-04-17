@@ -16,15 +16,14 @@ public class Drill extends BubbledEntity {
 	private Body body;
 	
 	public Drill() {
+		super();
 		sprite = new Sprite(new Texture("drill.png"));
 		bubble = new Animator("bubbles/bubble_transform.png", 0.1f);
-		bubbleShown = false;
 	}
 	
 	@Override
 	public void update(float dt) {
 		setPosition(body.getPosition().x - getHalfWidth(), body.getPosition().y - getHalfHeight());
-		sprite.setRotation(90 * body.getAngle());
 		playBubble(dt);
 	}
 	
@@ -36,13 +35,12 @@ public class Drill extends BubbledEntity {
 	}
 
 	@Override
-	public void interactWith() {
-		System.out.println("You feel this drill inside your body.");
+	public void interactWith(Player player) {
 	}
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
-		bdef.position.set(500, 500);
+		bdef.position.set(10, 0);
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		body = world.createBody(bdef);
 		body.setLinearDamping(2);

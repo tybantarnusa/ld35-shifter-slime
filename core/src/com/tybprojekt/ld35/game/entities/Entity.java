@@ -6,12 +6,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public abstract class Entity {
 	
 	protected Sprite sprite;
+	protected boolean destroyed;
 	
 	public void update(float dt){}
 	public void render(SpriteBatch batch){}
 	
 	public float getX() { return sprite.getX(); }
 	public float getY() { return sprite.getY(); }
+	
+	public boolean isDestroyed() { return destroyed; }
 	
 	public void setX(float x) {
 		sprite.setX(x);
@@ -49,5 +52,5 @@ public abstract class Entity {
 		sprite.getTexture().dispose();
 	}
 	
-	public void interactWith(){}
+	public void interactWith(Player player){}
 }

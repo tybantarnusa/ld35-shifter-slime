@@ -25,4 +25,8 @@ public class LD35 extends ApplicationAdapter {
 		gsm.current().render(batch);
 		gsm.current().update(Gdx.graphics.getDeltaTime());
 	}
+	
+	public GameStateManager getStateManager() {
+		return gsm;
+	}
 }

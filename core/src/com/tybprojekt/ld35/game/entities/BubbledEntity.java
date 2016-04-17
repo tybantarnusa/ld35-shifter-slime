@@ -7,6 +7,10 @@ public abstract class BubbledEntity extends Entity {
 	protected Animator bubble;
 	protected boolean bubbleShown;
 	
+	public BubbledEntity() {
+		bubbleShown = false;
+	}
+	
 	public void setBubbleShown(boolean shown) {
 		bubbleShown = shown;
 	}
@@ -21,5 +25,9 @@ public abstract class BubbledEntity extends Entity {
 		if (bubbleShown) batch.draw(bubble.getCurrentFrame(), getX() - getHalfWidth(), getY() + getHeight(), bubble.getCurrentFrame().getRegionWidth() * 2, bubble.getCurrentFrame().getRegionHeight() * 2);
 		bubbleShown = false;
 		batch.end();
+	}
+	
+	public void dispose() {
+		if (sprite != null) sprite.getTexture().dispose();
 	}
 }
