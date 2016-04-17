@@ -15,7 +15,7 @@ public class LD35 extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 		gsm = new GameStateManager();
-		gsm.push(new PlayState());
+		gsm.push(new PlayState(gsm));
 	}
 
 	@Override

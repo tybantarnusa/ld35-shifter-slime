@@ -41,7 +41,8 @@ public class Chainsaw extends BubbledEntity {
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
-		bdef.position.set(MathUtils.random(1000, 2000), MathUtils.random(1000, 2000));
+//		bdef.position.set(MathUtils.random(1000, 2000), MathUtils.random(1000, 2000));
+		bdef.position.set(100, 100);
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		body = world.createBody(bdef);
 		body.setLinearDamping(2);

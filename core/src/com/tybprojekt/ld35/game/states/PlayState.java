@@ -8,10 +8,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -26,19 +32,33 @@ import com.tybprojekt.ld35.game.entities.Stone;
 
 public class PlayState implements State {
 	
+	private GameStateManager gsm;
+	
+	private Texture hud;
 	private Texture grass;
 	private OrthographicCamera cam;
+	private OrthographicCamera hudCam;
 	private World world;
 	private Player player;
 	private Box2DDebugRenderer b2dr;
 	
+	private ShapeRenderer hudShaper;
+	
 	private Array<Entity> entities;
 	private Array<Entity> destroyQueue;
 	
-	private Music bgm;
-	PrintWriter writer;
+	public static String INFO_BOX = "find the device!";
 	
-	public PlayState() {
+	private Music bgm;
+	private PrintWriter writer;
+	
+	private BitmapFont font;
+	private BitmapFont smallFont;
+	private BitmapFont numFont;
+	
+	public PlayState(GameStateManager gsm) {
+		this.gsm = gsm;
+		
 		try {
 			writer = new PrintWriter(new File("kodingan.txt"));
 		} catch (FileNotFoundException e) {
@@ -47,6 +67,26 @@ public class PlayState implements State {
 		cam = new OrthographicCamera();
 		cam.setToOrtho(false);
 //		cam.zoom = 0.5f;
+		
+		hudCam = new OrthographicCamera();
+		hudCam.setToOrtho(false);
+		hud = new Texture("hud.png");
+		hudShaper = new ShapeRenderer();
+		
+		FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("font.ttf"));
+		FreeTypeFontParameter param = new FreeTypeFontParameter();
+		param.size = 16;
+		param.color = Color.WHITE;
+		font = generator.generateFont(param);
+		param.size = 12;
+		smallFont = generator.generateFont(param);
+		generator.dispose();
+		
+		generator = new FreeTypeFontGenerator(Gdx.files.internal("fontnum.ttf"));
+		param.size = 18;
+		param.color = new Color(157/225f, 241/225f, 157/225f, 1);
+		numFont = generator.generateFont(param);
+		generator.dispose();
 		
 		world = new World(new Vector2(0, 0), true);
 		world.setContactListener(new Collisions());
@@ -560,7 +600,7 @@ public class PlayState implements State {
 			Stone stone = new Stone(clickPos.x, clickPos.y);
 			stone.createBody(world);
 			entities.add(stone);
-			writer.printf("Stone stone = new Stone(%.2ff, %.2ff);%n", clickPos.x, clickPos.y);
+			writer.printf("stone = new Stone(%.2ff, %.2ff);%n", clickPos.x, clickPos.y);
 			writer.print("stone.createBody(world);\n");
 			writer.print("entities.add(stone);\n");
 		}
@@ -584,12 +624,44 @@ public class PlayState implements State {
 		for (Entity entity : entities) entity.render(batch);
 		player.render(batch);
 		if (player.getNextEntity() != null) player.getNextEntity().drawBubble(batch);
-		b2dr.render(world, cam.combined);
+//		b2dr.render(world, cam.combined);
+		
+		hudShaper.setProjectionMatrix(hudCam.combined);
+		hudShaper.begin(ShapeType.Filled);
+		hudShaper.setColor(Color.BLACK);
+		hudShaper.rect(30, 56, 30, 320);
+		if (player.getPercentLife() > 0.6)
+			hudShaper.setColor(Color.GREEN);
+		else if (player.getPercentLife() > 0.2)
+			hudShaper.setColor(Color.YELLOW);
+		else
+			hudShaper.setColor(Color.RED);
+		hudShaper.rect(30, 56, 30, 320 * player.getPercentLife());
+		
+		hudShaper.setColor(Color.BLACK);
+		hudShaper.rect(116, 420, 341, 20);
+		if (player.getPercentShiftTime() > 0.6)
+			hudShaper.setColor(Color.GREEN);
+		else if (player.getPercentShiftTime() > 0.2)
+			hudShaper.setColor(Color.YELLOW);
+		else
+			hudShaper.setColor(Color.RED);
+		hudShaper.rect(116, 420, 341 * player.getPercentShiftTime(), 20);
+		hudShaper.end();
+		
+		batch.setProjectionMatrix(hudCam.combined);
+		batch.begin();
+		batch.draw(hud, 0, 0);
+		font.draw(batch, INFO_BOX, 110, 65);
+		numFont.draw(batch, String.format("%03d", player.getEssencesNum()), 553, 423);
+		batch.end();
 	}
 	
 	public void dispose() {
 		bgm.dispose();
 		player.dispose();
+		hud.dispose();
+		hudShaper.dispose();
 	}
 	public OrthographicCamera getCam() {
 		return cam;

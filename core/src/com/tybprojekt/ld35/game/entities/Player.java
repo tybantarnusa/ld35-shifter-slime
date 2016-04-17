@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.tybprojekt.ld35.game.Animator;
 import com.tybprojekt.ld35.game.Control;
+import com.tybprojekt.ld35.game.states.PlayState;
 
 public class Player extends Entity {
 	
@@ -44,8 +45,14 @@ public class Player extends Entity {
 	
 	private float timer;
 	
+	private float lifeTime;
+	
+	private int essences;
+	
 	public Player() {
 		facingLeft = true;
+		
+		lifeTime = 90;
 		
 		animators = new TreeMap<String, Animator>();
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
@@ -67,10 +74,24 @@ public class Player extends Entity {
 		
 		shiftSfx = Gdx.audio.newSound(new FileHandle("shapeshift.ogg"));
 		stepSfx = Gdx.audio.newSound(new FileHandle("step.ogg"));
+
+		essences = 0;
 		
 		isWalking = false;
 		doAction = false;
 		shifting = false;
+	}
+	
+	public int getEssencesNum() {
+		return essences;
+	}
+	
+	public void addEssences(int amount) {
+		essences += amount;
+	}
+	
+	public void useEssences(int amount) {
+		essences -= amount;
 	}
 	
 	public void createBody(World world, boolean normal) {
@@ -82,6 +103,7 @@ public class Player extends Entity {
 		
 		if (normal) createNormalFixture();
 	}
+	
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
@@ -165,6 +187,10 @@ public class Player extends Entity {
 		shape.dispose();
 	}
 	
+	public float getPercentShiftTime() {
+		return MathUtils.clamp((SHIFT_TIME - timer) / SHIFT_TIME, 0, 1);
+	}
+	
 	private void backToNormalShape(float dt) {
 		if (timer < SHIFT_TIME + 0.1f) {
 			switch (currentShape) {
@@ -190,6 +216,7 @@ public class Player extends Entity {
 			animator = animators.get("normal");
 			animator.setLoop(true);
 			createNormalFixture();
+			PlayState.INFO_BOX = "you became normal again!";
 		}
 	}
 	
@@ -202,7 +229,7 @@ public class Player extends Entity {
 	
 	@Override
 	public void update(float dt) {
-		System.out.println(body.getPosition().x + ", " +  body.getPosition().y);
+//		System.out.println(body.getPosition().x + ", " +  body.getPosition().y);
 		if (currentShape != Shape.NORMAL) {
 			timer += dt;
 			if (timer > SHIFT_TIME) {
@@ -273,6 +300,16 @@ public class Player extends Entity {
 		
 		if (nextTo != null)
 			nextTo.setBubbleShown(true);
+		
+		lifeTime -= dt;
+	}
+	
+	public float getPercentLife() {
+		return MathUtils.clamp(lifeTime / 90f, 0, 1);
+	}
+	
+	public void  addLifeTime(float amount) {
+		lifeTime = lifeTime + amount > 90 ? 90 : lifeTime + amount;
 	}
 	
 	@Override
@@ -332,6 +369,7 @@ public class Player extends Entity {
 				world.destroyBody(body);
 				createBody(world, x, y);
 				createDrillFixture();
+				PlayState.INFO_BOX = "you turned into a drill!";
 			} else if (nextTo instanceof Chainsaw && currentShape == Shape.NORMAL) {
 				currentShape = Shape.CHAINSAW;
 				shifting = true;
@@ -342,6 +380,7 @@ public class Player extends Entity {
 				world.destroyBody(body);
 				createBody(world, x, y);
 				createChainsawFixture();
+				PlayState.INFO_BOX = "you turned into a chainsaw!";
 			}
 		}
 		

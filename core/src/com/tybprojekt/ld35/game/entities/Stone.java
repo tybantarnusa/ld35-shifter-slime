@@ -16,6 +16,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.tybprojekt.ld35.game.Animator;
 import com.tybprojekt.ld35.game.entities.Player.Shape;
+import com.tybprojekt.ld35.game.states.PlayState;
 
 public class Stone extends BubbledEntity {
 	
@@ -64,13 +65,16 @@ public class Stone extends BubbledEntity {
 		if (damageTaken < DURABILITY + 0.1f) {
 			animation = new Animator("stone_destroyed.png", 0.05f);
 			animation.setLoop(false);
-		}
+			}
 		if (animation.isFinished()) {
 			destroyed = true;
+			player.addLifeTime(5/2f);
+			player.addEssences(5/2);
 			for (Fixture f : body.getFixtureList()) {
 				body.destroyFixture(f);
 			}
 		}
+		PlayState.INFO_BOX = "you broke a stone! (+5 lifetime)";
 	}
 	
 	@Override
@@ -94,9 +98,11 @@ public class Stone extends BubbledEntity {
 		drilled = false;
 	}
 	
+	private Player player;
 	public void interactWith(Player player) {
+		this.player = player;
 		if (player.getShape() != Shape.DRILL) {
-			System.out.println("This stone looks breakable.");
+			PlayState.INFO_BOX = "can't break this stone";
 		} else {
 			damageTaken += Gdx.graphics.getDeltaTime();
 			drilled = true;
