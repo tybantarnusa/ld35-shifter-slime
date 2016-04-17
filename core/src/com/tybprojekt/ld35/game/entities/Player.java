@@ -24,7 +24,7 @@ public class Player extends Entity {
 		NORMAL,
 		SHIFTING,
 		DRILL,
-		KEY,
+		CHAINSAW,
 		TURRET
 	}
 
@@ -49,9 +49,17 @@ public class Player extends Entity {
 		
 		animators = new TreeMap<String, Animator>();
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
+		
+		// Drill animations
 		animators.put("shift drill", new Animator("slime_transform_drill.png", 0.1f));
 		animators.put("drill", new Animator("slime_drill.png", 0.3f));
 		animators.put("drilling", new Animator("slime_drilling.png", 0.05f));
+		
+		// Chainsaw animations
+		animators.put("shift chainsaw", new Animator("slime_transform_chainsaw.png", 0.1f));
+		animators.put("chainsaw", new Animator("slime_chainsaw.png", 0.3f));
+		animators.put("chainsawing", new Animator("slime_chainsawing.png", 0.05f));
+		
 		animator = animators.get("normal");
 		
 		sprite = new Sprite(animator.getCurrentFrame(), 0, 0, 2 * animator.getCurrentFrame().getRegionWidth(), 2 * animator.getCurrentFrame().getRegionHeight());
@@ -65,14 +73,30 @@ public class Player extends Entity {
 		shifting = false;
 	}
 	
-	public void createBody(World world) {
+	public void createBody(World world, boolean normal) {
 		BodyDef bdef = new BodyDef();
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		bdef.position.set(0, 0);
 		body = world.createBody(bdef);
 		body.setUserData(this);
 		
-		createNormalFixture();
+		if (normal) createNormalFixture();
+	}
+	
+	public void createBody(World world) {
+		BodyDef bdef = new BodyDef();
+		bdef.type = BodyDef.BodyType.DynamicBody;
+		bdef.position.set(0, 0);
+		body = world.createBody(bdef);
+		body.setUserData(this);
+	}
+	
+	public void createBody(World world, float x, float y) {
+		BodyDef bdef = new BodyDef();
+		bdef.type = BodyDef.BodyType.DynamicBody;
+		bdef.position.set(x, y);
+		body = world.createBody(bdef);
+		body.setUserData(this);
 	}
 	
 	private void createNormalFixture() {
@@ -119,11 +143,37 @@ public class Player extends Entity {
 		shape.dispose();
 	}
 	
+	private void createChainsawFixture() {
+		for(int i = 0; i < body.getFixtureList().size; i++)
+			body.destroyFixture(body.getFixtureList().get(i));
+		body.getFixtureList().clear();
+		
+		// Collider
+		PolygonShape shape = new PolygonShape();
+		shape.setAsBox(getHalfWidth() - 10, getHalfHeight()/2 - 5, new Vector2(0, -5), 0);
+		FixtureDef fdef = new FixtureDef();
+		fdef.shape = shape;
+		body.createFixture(fdef);
+		
+		// Interacting range
+		shape.setAsBox(getHalfWidth()/2-4, getHalfHeight()/2 + 7, new Vector2(0, 20), 0);
+		fdef.shape = shape;
+		fdef.isSensor = true;
+		Fixture fixture = body.createFixture(fdef);
+		fixture.setUserData("interactor");
+		
+		shape.dispose();
+	}
+	
 	private void backToNormalShape(float dt) {
 		if (timer < SHIFT_TIME + 0.1f) {
 			switch (currentShape) {
 			case DRILL:
 				animator = new Animator("slime_transform_drill.png", 0.1f, true);
+				animator.setLoop(false);
+				break;
+			case CHAINSAW:
+				animator = new Animator("slime_transform_chainsaw.png", 0.1f, true);
 				animator.setLoop(false);
 				break;
 			default:
@@ -152,6 +202,7 @@ public class Player extends Entity {
 	
 	@Override
 	public void update(float dt) {
+		System.out.println(body.getPosition().x + ", " +  body.getPosition().y);
 		if (currentShape != Shape.NORMAL) {
 			timer += dt;
 			if (timer > SHIFT_TIME) {
@@ -162,7 +213,6 @@ public class Player extends Entity {
 		handleInput(dt);
 		
 		if (shifting) {
-			System.out.println("masuk");
 			animator.play(dt);
 			if (animator.isFinished()) {
 				shifting = false;
@@ -173,18 +223,25 @@ public class Player extends Entity {
 			switch(currentShape) {
 			case DRILL:
 				animator = animators.get("drill");
+				break;
+			case CHAINSAW:
+				animator = animators.get("chainsaw");
+				break;
 			default:
 				break;
 			}
 			animator.play(dt);
 		}
 			
-		if (doAction && !shifting) {
-			System.out.println(doAction);
+		if (doAction && !shifting && currentShape != Shape.SHIFTING) {
 			animator.setLoop(true);
 			switch (currentShape) {
 			case DRILL:
 				animator = animators.get("drilling");
+				break;
+			case CHAINSAW:
+				animator = animators.get("chainsawing");
+				break;
 			default:
 				break;
 			}
@@ -262,6 +319,9 @@ public class Player extends Entity {
 		// Interact
 		if (Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) && nextTo != null) {
 			nextTo.interactWith(this);
+			World world = body.getWorld();
+			float x = body.getPosition().x;
+			float y = body.getPosition().y;
 			if (nextTo instanceof Drill && currentShape == Shape.NORMAL) {
 				currentShape = Shape.DRILL;
 				shifting = true;
@@ -269,7 +329,19 @@ public class Player extends Entity {
 				animator = animators.get("shift drill");
 				animator.reset();
 				animator.setLoop(false);
+				world.destroyBody(body);
+				createBody(world, x, y);
 				createDrillFixture();
+			} else if (nextTo instanceof Chainsaw && currentShape == Shape.NORMAL) {
+				currentShape = Shape.CHAINSAW;
+				shifting = true;
+				shiftSfx.play();
+				animator = animators.get("shift chainsaw");
+				animator.reset();
+				animator.setLoop(false);
+				world.destroyBody(body);
+				createBody(world, x, y);
+				createChainsawFixture();
 			}
 		}
 		
