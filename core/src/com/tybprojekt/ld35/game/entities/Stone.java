@@ -69,7 +69,7 @@ public class Stone extends BubbledEntity {
 		if (animation.isFinished()) {
 			destroyed = true;
 			player.addLifeTime(5/2f);
-			player.addEssences(5/2);
+			player.addEssences(10/2);
 			for (Fixture f : body.getFixtureList()) {
 				body.destroyFixture(f);
 			}

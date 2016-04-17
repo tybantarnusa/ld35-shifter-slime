@@ -609,6 +609,10 @@ public class PlayState implements State {
 			writer.flush();
 			System.out.println("New entities codes saved!");
 		}
+		
+		if (Gdx.input.isKeyJustPressed(Keys.ENTER)) {
+			gsm.push(new UpgradeState(gsm, player));
+		}
 	}
 
 	@Override
@@ -652,6 +656,7 @@ public class PlayState implements State {
 		batch.setProjectionMatrix(hudCam.combined);
 		batch.begin();
 		batch.draw(hud, 0, 0);
+		smallFont.draw(batch, "press ENTER to upgrade", 110, 90);
 		font.draw(batch, INFO_BOX, 110, 65);
 		numFont.draw(batch, String.format("%03d", player.getEssencesNum()), 553, 423);
 		batch.end();
@@ -662,7 +667,14 @@ public class PlayState implements State {
 		player.dispose();
 		hud.dispose();
 		hudShaper.dispose();
+		smallFont.dispose();
+		font.dispose();
+		numFont.dispose();
+		for (Entity entity : entities) {
+			entity.dispose();
+		}
 	}
+	
 	public OrthographicCamera getCam() {
 		return cam;
 	}

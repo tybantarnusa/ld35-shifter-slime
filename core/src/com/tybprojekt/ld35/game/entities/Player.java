@@ -29,14 +29,14 @@ public class Player extends Entity {
 		TURRET
 	}
 
-	private final float MOVE_SPEED = 10000;
+	public float MOVE_SPEED = 10000;
 	private boolean facingLeft;
 	private BubbledEntity nextTo;
 	private TreeMap<String, Animator> animators;
 	private Animator animator;
 	private Body body;
 	private Shape currentShape;
-	private final float SHIFT_TIME = 10;
+	public float SHIFT_TIME = 10;
 	private Sound shiftSfx;
 	private Sound stepSfx;
 	private boolean isWalking;
@@ -52,7 +52,7 @@ public class Player extends Entity {
 	public Player() {
 		facingLeft = true;
 		
-		lifeTime = 90;
+		lifeTime = 120;
 		
 		animators = new TreeMap<String, Animator>();
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
@@ -305,11 +305,15 @@ public class Player extends Entity {
 	}
 	
 	public float getPercentLife() {
-		return MathUtils.clamp(lifeTime / 90f, 0, 1);
+		return MathUtils.clamp(lifeTime / 120f, 0, 1);
+	}
+	
+	public void restoreLife() {
+		lifeTime = 120f;
 	}
 	
 	public void  addLifeTime(float amount) {
-		lifeTime = lifeTime + amount > 90 ? 90 : lifeTime + amount;
+		lifeTime = lifeTime + amount > 120 ? 120 : lifeTime + amount;
 	}
 	
 	@Override
