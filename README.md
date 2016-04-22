@@ -24,6 +24,15 @@ Controls:
 - Music: Generated using [autotracker.py](https://github.com/wibblymat/ld24/blob/master/autotracker.py)
 - Sound Effects: Generated using [LabChirp](http://labbed.net/software.php?id=labchirp)
 
+## Technology Used
+- [Java](https://www.java.com/en/) (programming language)
+- [LibGDX](https://libgdx.badlogicgames.com/) (game framework)
+- [Aseprite](http://www.aseprite.org/) (graphics)
+- [Adobe Photoshop CC](http://www.adobe.com/sea/products/photoshop.html) (graphics)
+- [autotracker.py](https://github.com/wibblymat/ld24/blob/master/autotracker.py) (music)
+- [LabChirp](http://labbed.net/software.php?id=labchirp) (sound effects)
+- [Eclipse ](http://www.eclipse.org/) (IDE)
+
 ## Downloads
 - [ShifterSlime_v1.0.3.jar](https://www.dropbox.com/s/aa1kr768c51lct9/ShifterSlime_v1.0.3.jar?dl=1) (Windows, Linux, Mac)
 - [ShifterSlime_v1.0.0.jar](https://www.dropbox.com/s/gso41hynwjstf9z/ShifterSlime.jar?dl=1) (old)
