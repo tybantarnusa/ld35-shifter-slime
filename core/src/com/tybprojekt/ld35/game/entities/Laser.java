@@ -12,13 +12,13 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.tybprojekt.ld35.game.Animator;
 
-public class Drill extends BubbledEntity {
+public class Laser extends BubbledEntity {
 	
 	private Body body;
 	
-	public Drill() {
+	public Laser() {
 		super();
-		sprite = new Sprite(new Texture("drill.png"));
+		sprite = new Sprite(new Texture("laser.png"));
 		bubble = new Animator("bubbles/bubble_transform.png", 0.1f);
 	}
 	
@@ -41,16 +41,16 @@ public class Drill extends BubbledEntity {
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
-		bdef.position.set(MathUtils.random(-500, 500), MathUtils.random(-500, 500));
+		bdef.position.set(MathUtils.random(-1000, 1000), MathUtils.random(-1000, 1000));
 		bdef.type = BodyDef.BodyType.DynamicBody;
 		body = world.createBody(bdef);
 		body.setLinearDamping(2);
 		body.setUserData(this);
 		body.setFixedRotation(true);
 		PolygonShape shape = new PolygonShape();
-		shape.set(new float[]{getX() - getHalfWidth(), getY(), getX() + getHalfWidth(), getY() + getHalfHeight(), getX(), getY() - getHalfHeight(), getX() - 5, getY() - getHalfHeight(), getX() - getHalfWidth(), getY() - 5});
+		shape.set(new float[]{getX() - getHalfWidth() + 4, getY() - getHalfHeight() + 7, getX() + getHalfWidth() - 6, getY() + getHalfHeight() - 4, getX() + getHalfWidth() - 1, getY() + getHalfHeight() - 8, getX() - getHalfWidth() + 8, getY() - getHalfHeight() + 2});
 		FixtureDef fdef = new FixtureDef();
-		fdef.density = 5;
+		fdef.density = 1;
 		fdef.shape = shape;
 		Fixture fixture = body.createFixture(fdef);
 		fixture.setUserData("interactable");

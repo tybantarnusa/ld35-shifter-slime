@@ -19,31 +19,31 @@ import com.tybprojekt.ld35.game.Animator;
 import com.tybprojekt.ld35.game.entities.Player.Shape;
 import com.tybprojekt.ld35.game.states.PlayState;
 
-public class Stone extends BubbledEntity {
+public class Metal extends BubbledEntity {
 	
 	private Body body;
 	private Animator animation;
 	
-	private final float DURABILITY = 5;
+	private final float DURABILITY = 10;
 	private float damageTaken;
-	private boolean drilled;
+	private boolean lasered;
 	private float x, y;
 	
 	private Texture texture;
 	
 	private ShapeRenderer healthBar;
 	
-	public Stone(float x, float y) {
+	public Metal(float x, float y) {
 		super();
 		this.x = x;
 		this.y = y;
-		texture = new Texture("stone.png");
+		texture = new Texture("metal.png");
 		texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
 		sprite = new Sprite(texture);
 		bubble = new Animator("bubbles/bubble_interact.png", 0.3f);
-		animation = new Animator("stone_drilled.png", 0.1f);
+		animation = new Animator("metal_lasered.png", 0.1f);
 		damageTaken = 0;
-		drilled = false;
+		lasered = false;
 		healthBar = new ShapeRenderer();
 	}
 	
@@ -53,7 +53,7 @@ public class Stone extends BubbledEntity {
 		if (damageTaken >= DURABILITY)
 			destroy();
 		
-		if (drilled) {
+		if (lasered) {
 			animation.play(Gdx.graphics.getDeltaTime());
 			sprite.setRegion(animation.getCurrentFrame());
 		} else {
@@ -63,20 +63,20 @@ public class Stone extends BubbledEntity {
 	}
 	
 	private void destroy() {
-		drilled = true;
+		lasered = true;
 		if (damageTaken < DURABILITY + 0.1f) {
-			animation = new Animator("stone_destroyed.png", 0.05f);
+			animation = new Animator("metal_destroyed.png", 0.05f);
 			animation.setLoop(false);
 			}
 		if (animation.isFinished()) {
 			destroyed = true;
-			player.addLifeTime(5/2f);
-			player.addEssences(10/2);
+			player.addLifeTime(15/2f);
+			player.addEssences(35/2);
 			for (Fixture f : body.getFixtureList()) {
 				body.destroyFixture(f);
 			}
 		}
-		PlayState.INFO_BOX = "you broke a stone! (+5 lifetime)";
+		PlayState.INFO_BOX = "you broke a metal wall! (+15 lifetime)";
 	}
 	
 	@Override
@@ -84,7 +84,7 @@ public class Stone extends BubbledEntity {
 		batch.begin();
 		sprite.draw(batch);
 		batch.end();
-		if (drilled) {
+		if (lasered) {
 			healthBar.setProjectionMatrix(batch.getProjectionMatrix());
 			if (damageTaken / DURABILITY < 0.5f)
 				healthBar.setColor(Color.GREEN);
@@ -97,18 +97,18 @@ public class Stone extends BubbledEntity {
 			healthBar.rect(getX() + 2, getY() + getHeight() - 5, MathUtils.clamp(30 - (30 * damageTaken / DURABILITY), 0, 30), 5);
 			healthBar.end();
 		}
-		drilled = false;
+		lasered = false;
 	}
 	
 	private Player player;
 	public void interactWith(Player player) {
 		this.player = player;
-		if (player.getShape() != Shape.DRILL) {
+		if (player.getShape() != Shape.LASER) {
 			PlayState.howa.play();
-			PlayState.INFO_BOX = "can't break this stone";
+			PlayState.INFO_BOX = "can't break this wall, it's made of metal!";
 		} else {
 			damageTaken += Gdx.graphics.getDeltaTime();
-			drilled = true;
+			lasered = true;
 		}
 	}
 	
@@ -120,7 +120,7 @@ public class Stone extends BubbledEntity {
 		body.setUserData(this);
 		body.setFixedRotation(true);
 		PolygonShape shape = new PolygonShape();
-		shape.set(new float[]{getX() - getHalfWidth(), getY() - getHalfHeight(), getX() - getHalfWidth(), getY() + 8, getX() - getHalfWidth() + 5, getY() - getHalfHeight() + 19, getX() - getHalfWidth() + 8, getY() + getHalfHeight(), getX() + getHalfWidth(), getY() + getHalfHeight(), getX() + getHalfWidth(), getY() - getHalfHeight()});
+		shape.setAsBox(getHalfWidth(), getHalfHeight());
 		FixtureDef fdef = new FixtureDef();
 		fdef.shape = shape;
 		Fixture fixture = body.createFixture(fdef);
@@ -133,4 +133,5 @@ public class Stone extends BubbledEntity {
 		animation.dispose();
 		texture.dispose();
 	}
+	
 }

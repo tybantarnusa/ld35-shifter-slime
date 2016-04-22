@@ -30,4 +30,5 @@ public abstract class BubbledEntity extends Entity {
 	public void dispose() {
 		if (sprite != null) sprite.getTexture().dispose();
 	}
+	
 }

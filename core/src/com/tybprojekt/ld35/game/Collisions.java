@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.tybprojekt.ld35.game.entities.BubbledEntity;
 import com.tybprojekt.ld35.game.entities.Player;
+import com.tybprojekt.ld35.game.states.PlayState;
 
 public class Collisions implements ContactListener {
 	@Override
@@ -24,6 +25,15 @@ public class Collisions implements ContactListener {
 				interact(b, a);
 			}
 		
+		}
+		
+		if (a.getBody().getUserData() != null && b.getBody().getUserData() != null) {
+			if ((a.getBody().getUserData().equals("barrier")
+					&& b.getBody().getUserData() instanceof Player)
+					|| (b.getBody().getUserData().equals("barrier")
+					&& a.getBody().getUserData() instanceof Player)) {
+				PlayState.INFO_BOX = "you felt a strong force barrier here!";
+			}
 		}
 	}
 	
@@ -50,6 +60,15 @@ public class Collisions implements ContactListener {
 				removeInteract(b, a);
 			}
 		
+		}
+		
+		if (a.getBody().getUserData() != null && b.getBody().getUserData() != null) {
+			if ((a.getBody().getUserData().equals("barrier")
+					&& b.getBody().getUserData() instanceof Player)
+					|| (b.getBody().getUserData().equals("barrier")
+					&& a.getBody().getUserData() instanceof Player)) {
+				PlayState.INFO_BOX = "better go somewhere else!";
+			}
 		}
 	}
 

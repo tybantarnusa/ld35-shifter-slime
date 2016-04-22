@@ -90,7 +90,7 @@ public class Animator {
 	
 	public boolean isFinished() {
 		if (loop) return false;
-		return currentFrame == frames[0].length - 1;
+		return currentFrame == frames[0].length-1;
 	}
 	
 	public boolean isIndexZero() {

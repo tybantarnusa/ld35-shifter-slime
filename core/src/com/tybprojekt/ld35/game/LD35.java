@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.tybprojekt.ld35.game.states.GameStateManager;
-import com.tybprojekt.ld35.game.states.PlayState;
+import com.tybprojekt.ld35.game.states.TitleState;
 
 public class LD35 extends ApplicationAdapter {
 	private SpriteBatch batch;
@@ -15,7 +15,7 @@ public class LD35 extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 		gsm = new GameStateManager();
-		gsm.push(new PlayState(gsm));
+		gsm.push(new TitleState(gsm));
 	}
 
 	@Override

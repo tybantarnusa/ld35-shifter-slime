@@ -3,8 +3,8 @@ package com.tybprojekt.ld35.game.entities;
 import java.util.TreeMap;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -26,10 +26,11 @@ public class Player extends Entity {
 		SHIFTING,
 		DRILL,
 		CHAINSAW,
-		TURRET
+		LASER
 	}
 
 	public float MOVE_SPEED = 10000;
+	private float playTime;
 	private boolean facingLeft;
 	private BubbledEntity nextTo;
 	private TreeMap<String, Animator> animators;
@@ -42,17 +43,22 @@ public class Player extends Entity {
 	private boolean isWalking;
 	private boolean doAction;
 	private boolean shifting;
+	private boolean win;
+	private Sound teleport;
 	
 	private float timer;
 	
+	private final float MAX_LIFETIME = 120f;
 	private float lifeTime;
 	
 	private int essences;
 	
 	public Player() {
+		playTime = 0;
 		facingLeft = true;
 		
-		lifeTime = 120;
+		lifeTime = MAX_LIFETIME;
+		win = false;
 		
 		animators = new TreeMap<String, Animator>();
 		animators.put("normal", new Animator("slime_guy_idle.png", 0.3f));
@@ -65,15 +71,24 @@ public class Player extends Entity {
 		// Chainsaw animations
 		animators.put("shift chainsaw", new Animator("slime_transform_chainsaw.png", 0.1f));
 		animators.put("chainsaw", new Animator("slime_chainsaw.png", 0.3f));
-		animators.put("chainsawing", new Animator("slime_chainsawing.png", 0.05f));
+		animators.put("chainsawing", new Animator("slime_chainsawing.png", 0.03f));
+		
+		// Laser animations
+		animators.put("shift laser", new Animator("slime_transform_laser.png", 0.1f));
+		animators.put("laser", new Animator("slime_laser.png", 0.3f));
+		animators.put("lasering", new Animator("slime_lasering.png", 0.03f));
+		
+
+		animators.put("win", new Animator("slime_win.png", 0.03f));
 		
 		animator = animators.get("normal");
 		
 		sprite = new Sprite(animator.getCurrentFrame(), 0, 0, 2 * animator.getCurrentFrame().getRegionWidth(), 2 * animator.getCurrentFrame().getRegionHeight());
 		currentShape = Shape.NORMAL;
 		
-		shiftSfx = Gdx.audio.newSound(new FileHandle("shapeshift.ogg"));
-		stepSfx = Gdx.audio.newSound(new FileHandle("step.ogg"));
+		shiftSfx = Gdx.audio.newSound(Gdx.files.internal("shapeshift.ogg"));
+		stepSfx = Gdx.audio.newSound(Gdx.files.internal("step.ogg"));
+		teleport = Gdx.audio.newSound(Gdx.files.internal("dadah.wav"));
 
 		essences = 0;
 		
@@ -104,6 +119,9 @@ public class Player extends Entity {
 		if (normal) createNormalFixture();
 	}
 	
+	public Body getBody() {
+		return body;
+	}
 	
 	public void createBody(World world) {
 		BodyDef bdef = new BodyDef();
@@ -187,6 +205,33 @@ public class Player extends Entity {
 		shape.dispose();
 	}
 	
+	private void createLaserFixture() {
+		for(int i = 0; i < body.getFixtureList().size; i++)
+			body.destroyFixture(body.getFixtureList().get(i));
+		body.getFixtureList().clear();
+		
+		// Collider
+		PolygonShape shape = new PolygonShape();
+		shape.setAsBox(getHalfWidth() - 12, getHalfHeight()/2 - 2, new Vector2(0, 7), 0);
+		FixtureDef fdef = new FixtureDef();
+		fdef.shape = shape;
+		body.createFixture(fdef);
+		
+		// Interacting range
+		shape.setAsBox(getHalfWidth()/2-15, getHalfHeight(), new Vector2(0, 15), 0);
+		fdef.shape = shape;
+		fdef.isSensor = true;
+		Fixture fixture = body.createFixture(fdef);
+		fixture.setUserData("interactor");
+		shape.setAsBox(getHalfWidth(), getHalfHeight()/2-15, new Vector2(0, 16), 0);
+		fdef.shape = shape;
+		fdef.isSensor = true;
+		fixture = body.createFixture(fdef);
+		fixture.setUserData("interactor");
+		
+		shape.dispose();
+	}
+	
 	public float getPercentShiftTime() {
 		return MathUtils.clamp((SHIFT_TIME - timer) / SHIFT_TIME, 0, 1);
 	}
@@ -200,6 +245,10 @@ public class Player extends Entity {
 				break;
 			case CHAINSAW:
 				animator = new Animator("slime_transform_chainsaw.png", 0.1f, true);
+				animator.setLoop(false);
+				break;
+			case LASER:
+				animator = new Animator("slime_transform_laser.png", 0.1f, true);
 				animator.setLoop(false);
 				break;
 			default:
@@ -227,9 +276,44 @@ public class Player extends Entity {
 		batch.end();
 	}
 	
+	public void win() {
+		this.win = true;
+	}
+	
+	public boolean isWin() {
+		return win;
+	}
+	
+	public Animator getAnimator() {
+		return animator;
+	}
+	
+	public int getPlayTime() {
+		return (int) playTime;
+	}
+	
+	boolean doneTeleport = false;
 	@Override
 	public void update(float dt) {
-//		System.out.println(body.getPosition().x + ", " +  body.getPosition().y);
+		if (win) {
+			if (currentShape != Shape.NORMAL) {
+				timer = SHIFT_TIME;
+			} else {
+				animator = animators.get("win");
+				animator.setLoop(false);
+				animator.play(dt);
+				if (!doneTeleport) {
+					teleport.play();
+					doneTeleport = true;
+				}
+				sprite.setRegion(animator.getCurrentFrame());
+				
+				return;
+			}
+		}
+		
+		playTime += dt;
+		
 		if (currentShape != Shape.NORMAL) {
 			timer += dt;
 			if (timer > SHIFT_TIME) {
@@ -254,6 +338,9 @@ public class Player extends Entity {
 			case CHAINSAW:
 				animator = animators.get("chainsaw");
 				break;
+			case LASER:
+				animator = animators.get("laser");
+				break;
 			default:
 				break;
 			}
@@ -264,10 +351,18 @@ public class Player extends Entity {
 			animator.setLoop(true);
 			switch (currentShape) {
 			case DRILL:
+				if (!PlayState.hwaa.isPlaying())
+					PlayState.hwaa.play();
 				animator = animators.get("drilling");
 				break;
 			case CHAINSAW:
+				if (!PlayState.hwaa.isPlaying())
+					PlayState.hwaa.play();
 				animator = animators.get("chainsawing");
+				break;
+			case LASER:
+				PlayState.cyu.play();
+				animator = animators.get("lasering");
 				break;
 			default:
 				break;
@@ -309,11 +404,11 @@ public class Player extends Entity {
 	}
 	
 	public void restoreLife() {
-		lifeTime = 120f;
+		lifeTime = MAX_LIFETIME;
 	}
 	
 	public void  addLifeTime(float amount) {
-		lifeTime = lifeTime + amount > 120 ? 120 : lifeTime + amount;
+		lifeTime = lifeTime + amount > MAX_LIFETIME ? MAX_LIFETIME : lifeTime + amount;
 	}
 	
 	@Override
@@ -358,7 +453,7 @@ public class Player extends Entity {
 		}
 		
 		// Interact
-		if (Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) && nextTo != null) {
+		if ((Gdx.input.isKeyJustPressed(Control.CONFIRM_BUTTON) || Gdx.input.isKeyJustPressed(Keys.Z)) && nextTo != null) {
 			nextTo.interactWith(this);
 			World world = body.getWorld();
 			float x = body.getPosition().x;
@@ -385,13 +480,33 @@ public class Player extends Entity {
 				createBody(world, x, y);
 				createChainsawFixture();
 				PlayState.INFO_BOX = "you turned into a chainsaw!";
+			} else if (nextTo instanceof Laser && currentShape == Shape.NORMAL) {
+				currentShape = Shape.LASER;
+				shifting = true;
+				shiftSfx.play();
+				animator = animators.get("shift laser");
+				animator.reset();
+				animator.setLoop(false);
+				world.destroyBody(body);
+				createBody(world, x, y);
+				createLaserFixture();
+				PlayState.INFO_BOX = "you turned into a... laser thing?";
 			}
 		}
 		
-		if (Gdx.input.isKeyPressed(Control.CONFIRM_BUTTON)) {
+		if ((Gdx.input.isKeyJustPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyJustPressed(Keys.SHIFT_RIGHT)) && currentShape != Shape.NORMAL) {
+			PlayState.INFO_BOX = "you tried to turn into normal by force!";
+			timer = SHIFT_TIME;
+		}
+		
+		if (Gdx.input.isKeyPressed(Control.CONFIRM_BUTTON) || Gdx.input.isKeyPressed(Keys.Z)) {
 			doAction = true;
 			if (nextTo != null) {
 				if (nextTo instanceof Stone && currentShape == Shape.DRILL) {
+					nextTo.interactWith(this);
+				} else if (nextTo instanceof Log && currentShape == Shape.CHAINSAW) {
+					nextTo.interactWith(this);
+				} else if (nextTo instanceof Metal && currentShape == Shape.LASER) {
 					nextTo.interactWith(this);
 				}
 			}
